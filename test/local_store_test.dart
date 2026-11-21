@@ -466,6 +466,7 @@ void main() {
           'guipian',
         ]);
       },
+      skip: allSourcesEnabled ? null : '仅红果构建下缺少 guipian 站源',
     );
 
     test('the backed up module list is offered once after a restore', () async {
