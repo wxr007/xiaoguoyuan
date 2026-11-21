@@ -227,7 +227,7 @@ if options.platform == 'android':
         artifacts.append(target)
 elif options.platform == 'windows':
     bundle = root / 'build' / 'windows' / 'x64' / 'runner' / 'Release'
-    bundle_executable = 'guoapp.exe'
+    bundle_executable = 'xiaoguoyuan.exe'
     required = [bundle_executable, 'duanju_core.dll', 'flutter_windows.dll', 'libffmpegkit.dll',
                 'libmpv-2.dll', 'msvcp140.dll', 'vcruntime140.dll',
                 'data/icudtl.dat', 'data/app.so']

@@ -5,7 +5,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val appPackageName = System.getenv("PACKAGE_NAME")?.trim()?.takeIf { it.isNotEmpty() } ?: "com.guoapp.app"
+val appPackageName = System.getenv("PACKAGE_NAME")?.trim()?.takeIf { it.isNotEmpty() } ?: "com.xiaoguoyuan.app"
 
 val releaseKey = rootProject.file("key.properties")
 val releaseProperties = Properties()
@@ -22,7 +22,7 @@ if (releaseKey.exists()) {
 val hasReleaseKey = releaseProperties.getProperty("storeFile") != null
 
 android {
-    namespace = "com.guoapp"
+    namespace = "com.xiaoguoyuan"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
@@ -37,7 +37,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["appLabel"] = "小果影视"
+        manifestPlaceholders["appLabel"] = "小果园"
         manifestPlaceholders["appBanner"] = "@drawable/tv_banner"
     }
 

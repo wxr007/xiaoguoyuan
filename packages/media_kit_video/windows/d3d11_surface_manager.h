@@ -1,6 +1,6 @@
 // packages/media_kit_video/windows/d3d11_surface_manager.h
 // Based on media_kit_video 2.0.1 (MIT, Hitesh Kumar Saini).
-// Modified for guoapp: Windows uses mpv 0.42 MPV_RENDER_API_TYPE_D3D11.
+// Modified for xiaoguoyuan: Windows uses mpv 0.42 MPV_RENDER_API_TYPE_D3D11.
 #ifndef D3D11_SURFACE_MANAGER_H_
 #define D3D11_SURFACE_MANAGER_H_
 

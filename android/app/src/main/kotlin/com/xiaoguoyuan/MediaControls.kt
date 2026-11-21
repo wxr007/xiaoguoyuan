@@ -1,4 +1,4 @@
-package com.guoapp
+package com.xiaoguoyuan
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -23,7 +23,7 @@ import android.os.PowerManager
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
-private const val MEDIA_CONTROL_ACTION = "com.guoapp.MEDIA_CONTROL"
+private const val MEDIA_CONTROL_ACTION = "com.xiaoguoyuan.MEDIA_CONTROL"
 private const val ARTWORK_EXTENT = 512
 
 class MediaControls(context: Context, messenger: BinaryMessenger) {
@@ -40,13 +40,13 @@ class MediaControls(context: Context, messenger: BinaryMessenger) {
     private val channel = MethodChannel(messenger, "duanju/media")
     private val notifications = this.context.getSystemService(NotificationManager::class.java)
     private val audio = this.context.getSystemService(AudioManager::class.java)
-    private val session = MediaSession(this.context, "guoapp")
+    private val session = MediaSession(this.context, "xiaoguoyuan")
     private val wakeLock = this.context.getSystemService(PowerManager::class.java)
-        .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "guoapp:playback")
+        .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "xiaoguoyuan:playback")
         .apply { setReferenceCounted(false) }
     @Suppress("DEPRECATION")
     private val wifiLock = this.context.getSystemService(WifiManager::class.java)
-        .createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "guoapp:playback")
+        .createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "xiaoguoyuan:playback")
         .apply { setReferenceCounted(false) }
 
     private var title = ""

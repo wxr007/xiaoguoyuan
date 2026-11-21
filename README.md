@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" width="120" alt="小果影视图标">
+<img src="ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" width="120" alt="小果园图标">
 
-# 小果影视
+# 小果园
 
 Flutter 多端独立影视应用，手机、平板、电脑和电视分别适配
 
-[![Release](https://img.shields.io/github/v/release/Xanerix/guoapp?style=flat-square&color=3d4656)](../../releases)
+[![Release](https://img.shields.io/github/v/release/wxr007/xiaoguoyuan?style=flat-square&color=3d4656)](../../releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-3d4656?style=flat-square)](LICENSE)
 ![Flutter](https://img.shields.io/badge/Flutter-3.47.9-02569B?style=flat-square&logo=flutter&logoColor=white)
 ![Platforms](https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Windows%20%7C%20macOS-8fa3bc?style=flat-square)
@@ -68,12 +68,12 @@ Flutter 多端独立影视应用，手机、平板、电脑和电视分别适配
 
 ## 安装
 
-在 [Releases](../../releases) 下载对应平台的包，文件名以 `guoapp-` 开头。
+在 [Releases](../../releases) 下载对应平台的包，文件名以 `xiaoguoyuan-` 开头。
 
 | 平台 | 安装包 |
 | --- | --- |
 | Android 7.0+ | arm64-v8a / armeabi-v7a / x86_64 三种 APK，按设备架构选择（大多数手机选 arm64-v8a）；同一签名可覆盖升级，旧证书版本需卸载重装 |
-| Windows 10/11 x64 | 安装包 `*-setup.exe`，默认安装到当前用户、无需管理员权限；或便携 ZIP，解压后运行 `guoapp.exe`，保留所有 DLL 与 `data` 目录；便携版的设置、记录、缓存和默认下载都存在程序旁的 `userdata` 目录，删掉该目录则改回存到系统用户目录 |
+| Windows 10/11 x64 | 安装包 `*-setup.exe`，默认安装到当前用户、无需管理员权限；或便携 ZIP，解压后运行 `xiaoguoyuan.exe`，保留所有 DLL 与 `data` 目录；便携版的设置、记录、缓存和默认下载都存在程序旁的 `userdata` 目录，删掉该目录则改回存到系统用户目录 |
 | iOS 15.1+ | 未签名 IPA，需自行签名或用 iloader 等工具侧载 |
 | macOS 12+ | 通用 dmg（Apple 芯片与 Intel），打开后拖入「应用程序」；未经公证，首次打开前需解除隔离（见下方） |
 
@@ -84,7 +84,7 @@ Flutter 多端独立影视应用，手机、平板、电脑和电视分别适配
 > macOS 首次打开前在终端执行：
 >
 > ```sh
-> xattr -dr com.apple.quarantine /Applications/小果影视.app
+> xattr -dr com.apple.quarantine /Applications/小果园.app
 > ```
 
 ## 使用说明
@@ -147,7 +147,7 @@ Flutter 多端独立影视应用，手机、平板、电脑和电视分别适配
 | 请求 | 发送内容 |
 | --- | --- |
 | 检查更新 | 不发送任何数据，只读取最新版本号。启动时检查一次，有新版时每次启动都会提示，可选择忽略此版本或不再提醒 |
-| 匿名使用统计 | 只发送：首次统计时生成的随机编号（与设备、账号无关）、应用版本号、平台（Android / iOS / Windows / macOS）、构建标识（固定为 `guoapp`） |
+| 匿名使用统计 | 只发送：首次统计时生成的随机编号（与设备、账号无关）、应用版本号、平台（Android / iOS / Windows / macOS）、构建标识（固定为 `xiaoguoyuan`） |
 
 不发送观看记录、追剧、搜索、站源设置或其他任何个人数据，接收端代码见 [`worker/`](worker)。两项都可以在 **设置 › 关于** 分别关闭，关闭后应用不会再发出对应的请求。
 
