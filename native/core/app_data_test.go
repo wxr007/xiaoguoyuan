@@ -68,7 +68,7 @@ func TestClearCacheRefusesWhenCacheHoldsData(t *testing.T) {
 
 func TestDeleteAllDataRemovesEverything(t *testing.T) {
 	base := t.TempDir()
-	external := filepath.Join(base, "external", "zhenguojian-downloads")
+	external := filepath.Join(base, "external", "xiaoguoyuan-downloads")
 	engine := testDataEngine(t, filepath.Join(base, "data"), filepath.Join(base, "cache"), external)
 	writeDataFile(t, filepath.Join(engine.directory, "modules", "demo", "module.json"))
 	writeDataFile(t, filepath.Join(engine.cacheDirectory, "rankings.json"))

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../app_device.dart';
 import '../../local_store.dart';
 import '../app_scope.dart';
 import '../widgets/focus_ring.dart';
@@ -57,6 +58,8 @@ class _StorageViewState extends State<StorageView> {
     }
   }
 
+  static const _downloadFolder = 'xiaoguoyuan-downloads';
+
   Future<String?> _pickParent() async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       return FilePicker.getDirectoryPath(dialogTitle: '选择下载保存位置');
@@ -69,6 +72,10 @@ class _StorageViewState extends State<StorageView> {
         directories[directory.path] = index == 0
             ? '设备共享存储（应用目录）'
             : 'SD 卡 ${index + 1}（应用目录）';
+      }
+      final public = _publicDownloadPath(external);
+      if (public != null) {
+        directories[public] = '公共下载目录（重装应用不删除）';
       }
     } else {
       final documents = await getApplicationDocumentsDirectory();
@@ -83,21 +90,73 @@ class _StorageViewState extends State<StorageView> {
     );
   }
 
+  String? _publicDownloadPath(List<Directory> external) {
+    for (final directory in external) {
+      final path = directory.path;
+      final index = path.indexOf('/Android/data/');
+      if (index > 0) return '${path.substring(0, index)}/Download';
+    }
+    return null;
+  }
+
   Future<void> _move() async {
     final parent = await _pickParent();
     if (parent == null || !mounted) return;
-    await _migrate(parent, parent);
+    final isPublic = await _needsPublicAccess(parent);
+    if (isPublic && !await _ensurePublicAccess()) return;
+    if (!mounted) return;
+    await _migrate(parent, '$parent/$_downloadFolder', isPublic: isPublic);
   }
 
   Future<void> _restore() => _migrate('', '应用默认目录');
 
-  Future<void> _migrate(String parent, String destination) async {
+  Future<bool> _needsPublicAccess(String path) async {
+    if (!Platform.isAndroid) return false;
+    final external = await getExternalStorageDirectories() ?? [];
+    final public = _publicDownloadPath(external);
+    return public != null && path == public;
+  }
+
+  Future<bool> _ensurePublicAccess() async {
+    if (!Platform.isAndroid) return true;
+    if (await AppDevice.exportStorageAccess()) return true;
+    if (!mounted) return false;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('需要所有文件访问权限'),
+        content: const Text('下载到公共目录需要在系统设置中允许「管理所有文件」。授权后返回本页重新选择。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            autofocus: true,
+            onPressed: () async {
+              Navigator.pop(context);
+              await AppDevice.openExportStorageSettings();
+            },
+            child: const Text('去授权'),
+          ),
+        ],
+      ),
+    );
+    return false;
+  }
+
+  Future<void> _migrate(
+    String parent,
+    String destination, {
+    bool isPublic = false,
+  }) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('迁移已下载内容？'),
         content: Text(
-          '将下载目录里的全部内容迁移到：\n$destination\n\n下载会先暂停，复制成功后清理旧目录。请保证目标有足够空间，并在完成后继续下载。',
+          '将下载目录里的全部内容迁移到：\n$destination\n\n下载会先暂停，复制成功后清理旧目录。请保证目标有足够空间，并在完成后继续下载。'
+          '${isPublic ? '\n\n该位置属于公共存储，卸载或重装应用不会删除文件，但其他应用和设备可以直接访问这些文件。' : ''}',
         ),
         actions: [
           TextButton(

@@ -58,6 +58,24 @@ class AppDevice {
     }
   }
 
+  static Future<bool> exportStorageAccess() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return true;
+    try {
+      return await channel.invokeMethod<bool>('exportStorageAccess') ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  static Future<void> openExportStorageSettings() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      await channel.invokeMethod<void>('openExportStorageSettings');
+    } catch (_) {
+      return;
+    }
+  }
+
   static Future<bool> setCompatibleRendering(bool enabled) async {
     if (defaultTargetPlatform != TargetPlatform.android) return false;
     try {
