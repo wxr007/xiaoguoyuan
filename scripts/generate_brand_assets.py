@@ -19,7 +19,7 @@ def render(svg):
 
 foreground = render(source)
 silhouette = render(source.replace(' filter="url(#shadow)"', ''))
-icon = Image.new('RGBA', (1024, 1024), '#CDE5F9')
+icon = Image.new('RGBA', (1024, 1024), '#FCEDBE')
 icon.alpha_composite(foreground)
 rounded = icon.copy()
 corners = Image.new('L', (1024, 1024), 0)
@@ -61,7 +61,7 @@ for density, scale in [('mdpi', 1), ('hdpi', 1.5), ('xhdpi', 2), ('xxhdpi', 3), 
          f'android/app/src/main/res/mipmap-{density}/ic_launcher_foreground.png')
     save(monochrome.resize((layer, layer), Image.Resampling.LANCZOS),
          f'android/app/src/main/res/mipmap-{density}/ic_launcher_monochrome.png')
-banner = Image.new('RGB', (640, 360), '#F5F9FC')
+banner = Image.new('RGB', (640, 360), '#FDF7E6')
 badge = rounded.resize((220, 220), Image.Resampling.LANCZOS)
 banner.paste(badge, (210, 70), badge)
 save(banner, 'android/app/src/main/res/drawable-xhdpi/tv_banner.png')

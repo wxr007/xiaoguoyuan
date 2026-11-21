@@ -71,7 +71,7 @@ def draw_dmg_background(path, display):
     except ImportError:
         return None
     width, height = 620, 380
-    image = Image.new('RGB', (width, height), '#F5F9FC')
+    image = Image.new('RGB', (width, height), '#FDF7E6')
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, width, 96), fill='#E8F1FA')
     arrow = '#B9CBDD'
@@ -87,7 +87,7 @@ def draw_dmg_background(path, display):
             break
     title = ImageFont.truetype(font_path, 26) if font_path else ImageFont.load_default()
     hint = ImageFont.truetype(font_path, 15) if font_path else ImageFont.load_default()
-    draw.text((width / 2, 48), display, font=title, fill='#3B4552', anchor='mm')
+    draw.text((width / 2, 48), display, font=title, fill='#5A4212', anchor='mm')
     draw.text((width / 2, 292), f'把「{display}」拖到右侧 Applications 完成安装',
               font=hint, fill='#7A8796', anchor='mm')
     image.save(path)
