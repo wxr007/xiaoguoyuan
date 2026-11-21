@@ -89,6 +89,16 @@ func nativeDefaultDownloads(directory string) string {
 	return filepath.Join(directory, "downloads")
 }
 
+func nativeEnsureNoMedia(directory string) error {
+	path := filepath.Join(directory, ".nomedia")
+	if _, err := os.Stat(path); err == nil {
+		return nil
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	return os.WriteFile(path, nil, 0644)
+}
+
 func nativeCopyTree(ctx context.Context, source, target string) error {
 	return filepath.WalkDir(source, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
@@ -213,6 +223,7 @@ func (engine *nativeEngine) moveDownloads(ctx context.Context, parent string) (s
 		_ = os.RemoveAll(target)
 		return "", "", errors.New("文件迁移未完成，原文件已保留，请检查空间与目录权限")
 	}
+	_ = nativeEnsureNoMedia(target)
 	if err := ctx.Err(); err != nil {
 		_ = os.RemoveAll(target)
 		return "", "", err
