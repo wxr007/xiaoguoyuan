@@ -1,6 +1,8 @@
 name: Build app packages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -72,7 +74,7 @@ jobs:
             exit 1
           fi
           tag="app-v${version//+/-}"
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null || gh release view "$tag" >/dev/null 2>&1; then
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && { git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null || gh release view "$tag" >/dev/null 2>&1; }; then
             echo "版本 $version（$tag）已发布过，请先提升 pubspec.yaml 的 version。" >&2
             exit 1
           fi
@@ -159,6 +161,7 @@ jobs:
 
   release:
     needs: [checks, prepare, android]
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
