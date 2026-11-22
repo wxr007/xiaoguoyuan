@@ -206,6 +206,7 @@ abstract class AppRepository {
   Future<({int queued, int skipped})> queueConversions(
     List<String> ids,
   ) async => (queued: 0, skipped: 0);
+  Future<void> ensureDownloadCovers() async {}
   Future<void> finishConversion(String id, String result) async {}
   Future<DownloadBatchResult> controlDownloadBatch(
     String command,
@@ -1232,6 +1233,11 @@ class NativeRepository extends AppRepository {
       queued: (result['queued'] as num?)?.toInt() ?? 0,
       skipped: (result['skipped'] as num?)?.toInt() ?? 0,
     );
+  }
+
+  @override
+  Future<void> ensureDownloadCovers() async {
+    await _call({'action': 'ensureDownloadCovers'});
   }
 
   @override

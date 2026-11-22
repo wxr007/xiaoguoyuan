@@ -66,6 +66,10 @@ class _DownloadsPageState extends State<DownloadsPage>
   void initState() {
     super.initState();
     widget.downloads.refresh();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(AppScope.of(context).repository.ensureDownloadCovers());
+    });
   }
 
   @override

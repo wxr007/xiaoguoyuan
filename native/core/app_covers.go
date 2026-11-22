@@ -326,6 +326,70 @@ func nativeIsCoverImage(data []byte) bool {
 	return false
 }
 
+type nativeCoverTarget struct {
+	drama     LibraryDrama
+	directory string
+}
+
+// ensureDownloadCovers 把每部已下载剧集的封面副本写入其下载文件夹，便于随目录迁移与外部客户端使用。
+func (engine *nativeEngine) ensureDownloadCovers(ctx context.Context) (int, int, error) {
+	if engine.downloads == nil {
+		return 0, 0, nil
+	}
+	manager := engine.downloads
+	manager.mu.Lock()
+	targets := make([]nativeCoverTarget, 0, len(manager.jobs))
+	seen := map[string]bool{}
+	for _, record := range manager.jobs {
+		if record == nil || record.Drama.ID == "" || seen[record.Drama.ID] {
+			continue
+		}
+		seen[record.Drama.ID] = true
+		directory := ""
+		if record.Output != "" {
+			directory = filepath.Dir(manager.outputFile(record.Output))
+		} else {
+			directory = manager.jobDirectory(record.nativeDownloadJob)
+		}
+		if directory == "" {
+			continue
+		}
+		targets = append(
+			targets,
+			nativeCoverTarget{drama: record.Drama, directory: directory},
+		)
+	}
+	manager.mu.Unlock()
+
+	saved, skipped := 0, 0
+	for _, target := range targets {
+		path := filepath.Join(target.directory, "cover.jpg")
+		if _, err := os.Stat(path); err == nil {
+			continue
+		}
+		if err := os.MkdirAll(target.directory, 0700); err != nil {
+			skipped++
+			continue
+		}
+		source, err := engine.covers.loadAddress(ctx, target.drama, false)
+		if err != nil || source == "" {
+			skipped++
+			continue
+		}
+		data, err := os.ReadFile(source)
+		if err != nil || len(data) == 0 {
+			skipped++
+			continue
+		}
+		if err := os.WriteFile(path, data, 0600); err != nil {
+			skipped++
+			continue
+		}
+		saved++
+	}
+	return saved, skipped, nil
+}
+
 func (cache *nativeCoverCache) prune(keep string) {
 	if cache.size <= cache.limit && len(cache.entries) <= nativeCoverCacheEntries {
 		return
