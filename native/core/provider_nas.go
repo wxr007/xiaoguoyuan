@@ -147,15 +147,12 @@ func (p *nasProvider) Detail(ctx context.Context, sourceID string) (Drama, []Cha
 	}
 	tags := append([]string{}, nfo.Tags...)
 	size := strings.TrimSpace(nfo.Size)
-	if size != "" {
-		tags = append(tags, "大小 "+size)
-	}
-	if value := strings.TrimSpace(nfo.Source); value != "" {
-		tags = append(tags, "来源 "+value)
-	}
 	badge := "共 " + strconv.Itoa(len(chapters)) + " 集"
 	if size != "" {
 		badge += " · " + size
+	}
+	if value := strings.TrimSpace(nfo.Source); value != "" {
+		badge += "\n" + value
 	}
 	drama.Tags = tags
 	drama.Badge = badge

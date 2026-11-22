@@ -111,10 +111,17 @@ class DramaCover extends StatelessWidget {
           if (details && (drama.badge.isNotEmpty || drama.episodes > 0))
             Positioned(
               left: 9,
+              right: 9,
               bottom: 9,
               child: Text(
                 drama.badge.isNotEmpty ? drama.badge : '共 ${drama.episodes} 集',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  height: 1.3,
+                ),
               ),
             ),
           if (details && showScore && drama.score.isNotEmpty)
