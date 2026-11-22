@@ -140,6 +140,16 @@ class _AppBootstrapState extends State<AppBootstrap>
         store = local;
         repository.access = local;
       });
+      unawaited(
+        repository
+            .setNasConfig(
+              url: local.nasUrl,
+              user: local.nasUser,
+              password: local.nasPassword,
+              root: local.nasRoot,
+            )
+            .catchError((Object _) {}),
+      );
     } catch (failure) {
       if (mounted) setState(() => error = failure);
     }

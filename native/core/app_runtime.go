@@ -79,6 +79,10 @@ type nativeInput struct {
 	Directory       string                  `json:"directory"`
 	Cache           string                  `json:"cache"`
 	Downloads       string                  `json:"downloads"`
+	NasURL          string                  `json:"nasUrl"`
+	NasUser         string                  `json:"nasUser"`
+	NasPassword     string                  `json:"nasPassword"`
+	NasRoot         string                  `json:"nasRoot"`
 	Source          string                  `json:"source"`
 	Page            int                     `json:"page"`
 	Query           string                  `json:"query"`
@@ -439,6 +443,12 @@ func nativeDispatch(input nativeInput) (any, error) {
 	case "queueConversions":
 		queued, skipped, err := engine.downloads.queueConversions(input.JobIDs)
 		return map[string]int{"queued": queued, "skipped": skipped}, err
+	case "setNasSettings":
+		setNasSettings(nasSettings{
+			BaseURL: input.NasURL, Root: input.NasRoot,
+			User: input.NasUser, Password: input.NasPassword,
+		})
+		return true, nil
 	case "ensureDownloadCovers":
 		saved, skipped, err := engine.ensureDownloadCovers(ctx)
 		return map[string]int{"saved": saved, "skipped": skipped}, err

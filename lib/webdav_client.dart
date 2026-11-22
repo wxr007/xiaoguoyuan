@@ -247,6 +247,33 @@ class WebDavClient {
     await _send('PUT', uriFor(relative), body: bytes);
   }
 
+  Future<List<int>> download(String relative) async {
+    final client = _client();
+    try {
+      final request = await client.getUrl(uriFor(relative));
+      request.headers.set(HttpHeaders.authorizationHeader, _authorization);
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        await response.drain<void>();
+        throw WebDavException(
+          _message(response.statusCode),
+          response.statusCode,
+        );
+      }
+      final bytes = <int>[];
+      await for (final chunk in response) {
+        bytes.addAll(chunk);
+      }
+      return bytes;
+    } on WebDavException {
+      rethrow;
+    } on SocketException {
+      throw WebDavException('无法连接 NAS，请检查地址、端口和网络');
+    } finally {
+      client.close(force: true);
+    }
+  }
+
   Future<void> uploadFile(
     String relative,
     File file, {

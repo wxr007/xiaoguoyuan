@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../local_store.dart';
 import '../../webdav_client.dart';
+import '../app_scope.dart';
 import '../widgets/group_card.dart';
 
 class NasView extends StatefulWidget {
@@ -62,6 +63,13 @@ class _NasViewState extends State<NasView> {
   Future<void> _save() => _run(() async {
     if (_url.text.trim().isEmpty) throw WebDavException('请先填写 NAS 地址');
     await widget.store.setNasConfig(
+      url: _url.text,
+      user: _user.text,
+      password: _password.text,
+      root: _root.text,
+    );
+    if (!mounted) return '已保存';
+    await AppScope.of(context).repository.setNasConfig(
       url: _url.text,
       user: _user.text,
       password: _password.text,

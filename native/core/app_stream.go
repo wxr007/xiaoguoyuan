@@ -37,6 +37,7 @@ type nativeStreamSession struct {
 	mu           sync.Mutex
 	assets       map[string]nativeStreamAsset
 	referer      string
+	headers      map[string]string
 	key          []byte
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -139,7 +140,7 @@ func (stream *nativeStreamServer) nativeOpen(source string, media ProviderMedia)
 	}
 	token := hex.EncodeToString(tokenBytes)
 	ctx, cancel := context.WithCancel(providerMediaContext(context.Background(), media.Credentials))
-	session := &nativeStreamSession{assets: map[string]nativeStreamAsset{}, referer: media.Referer, key: media.HLSKey, ctx: ctx, cancel: cancel, lastUsed: time.Now(), credentials: media.Credentials, source: source, diagnosticID: nativeStreamID(token)}
+	session := &nativeStreamSession{assets: map[string]nativeStreamAsset{}, referer: media.Referer, headers: media.Headers, key: media.HLSKey, ctx: ctx, cancel: cancel, lastUsed: time.Now(), credentials: media.Credentials, source: source, diagnosticID: nativeStreamID(token)}
 	stream.mu.Lock()
 	for id, old := range stream.sessions {
 		if time.Since(old.lastUsed) > 10*time.Minute {
@@ -369,6 +370,11 @@ func (stream *nativeStreamServer) nativeServe(writer http.ResponseWriter, reques
 	}
 	upstream.Header.Set("User-Agent", UserAgent)
 	upstream.Header.Set("Referer", session.referer)
+	for name, value := range session.headers {
+		if name != "" && value != "" {
+			upstream.Header.Set(name, value)
+		}
+	}
 	for _, name := range []string{"Range", "If-Range"} {
 		if value := request.Header.Get(name); value != "" {
 			upstream.Header.Set(name, value)

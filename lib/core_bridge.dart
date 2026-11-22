@@ -4,6 +4,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +19,7 @@ import 'catalog_updates.dart';
 import 'download_collections.dart';
 import 'resource_settings.dart';
 import 'diary_service.dart';
+import 'webdav_client.dart';
 import 'app_update.dart';
 import 'sorani_account.dart';
 import 'source_modules.dart';
@@ -207,6 +209,12 @@ abstract class AppRepository {
     List<String> ids,
   ) async => (queued: 0, skipped: 0);
   Future<void> ensureDownloadCovers() async {}
+  Future<void> setNasConfig({
+    required String url,
+    required String user,
+    required String password,
+    required String root,
+  }) async {}
   Future<void> finishConversion(String id, String result) async {}
   Future<DownloadBatchResult> controlDownloadBatch(
     String command,
@@ -276,6 +284,10 @@ class NativeRepository extends AppRepository {
   NativeRepository({this.background = false});
   final bool background;
   LocalStore? access;
+  String _nasUrl = '';
+  String _nasUser = '';
+  String _nasPassword = '';
+  String _nasRoot = '';
   final _readOwner = DateTime.now().microsecondsSinceEpoch.toString();
   int _readSequence = 0;
   final _activeReads = <String, int>{};
@@ -1002,6 +1014,10 @@ class NativeRepository extends AppRepository {
 
   @override
   Future<String> cover(Drama drama, {bool force = false}) async {
+    if (drama.source == 'nas') {
+      final file = await _nasCover(drama, force: force);
+      return _rememberCover('${drama.id}\u0000nas', file);
+    }
     final key = '${drama.id}\u0000${drama.cover}';
     final known = force ? null : _coverPaths[key];
     if (known != null) {
@@ -1238,6 +1254,53 @@ class NativeRepository extends AppRepository {
   @override
   Future<void> ensureDownloadCovers() async {
     await _call({'action': 'ensureDownloadCovers'});
+  }
+
+  @override
+  Future<void> setNasConfig({
+    required String url,
+    required String user,
+    required String password,
+    required String root,
+  }) async {
+    _nasUrl = url.trim();
+    _nasUser = user.trim();
+    _nasPassword = password;
+    _nasRoot = root.trim();
+    await _call({
+      'action': 'setNasSettings',
+      'nasUrl': _nasUrl,
+      'nasUser': _nasUser,
+      'nasPassword': _nasPassword,
+      'nasRoot': _nasRoot,
+    });
+  }
+
+  WebDavClient? get _nasClient {
+    if (_nasUrl.isEmpty) return null;
+    return WebDavClient(
+      baseUrl: _nasUrl,
+      username: _nasUser,
+      password: _nasPassword,
+      root: _nasRoot,
+    );
+  }
+
+  Future<String> _nasCover(Drama drama, {bool force = false}) async {
+    final support = await getApplicationSupportDirectory();
+    final folder = Directory(path.join(support.path, 'nas-covers'));
+    await folder.create(recursive: true);
+    final digest = sha256.convert(
+      utf8.encode('${drama.source}\u0000${drama.sourceId}'),
+    );
+    final file = File(path.join(folder.path, '$digest.img'));
+    if (!force && await file.exists()) return file.path;
+    final client = _nasClient;
+    if (client == null) throw AppFailure('请先在设置中配置 NAS 地址');
+    final folderName = drama.sourceId.isEmpty ? drama.title : drama.sourceId;
+    final bytes = await client.download('$folderName/poster.jpg');
+    await file.writeAsBytes(bytes, flush: true);
+    return file.path;
   }
 
   @override
