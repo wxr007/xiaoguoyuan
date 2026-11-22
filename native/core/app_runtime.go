@@ -49,6 +49,7 @@ type LibraryDrama struct {
 	ID             string   `json:"id"`
 	Source         string   `json:"source"`
 	SourceID       string   `json:"sourceId"`
+	SourceName     string   `json:"sourceName,omitempty"`
 	Title          string   `json:"title"`
 	Description    string   `json:"description"`
 	Cover          string   `json:"cover"`
@@ -211,7 +212,8 @@ func NativeNormalize(drama Drama) LibraryDrama {
 		}
 	}
 	source, sourceID, _ := SplitProviderDramaID(drama.ID)
-	return LibraryDrama{MetadataSchema: 1, ID: drama.ID, Source: source, SourceID: sourceID, Title: drama.DisplayTitle(),
+	return LibraryDrama{MetadataSchema: 1, ID: drama.ID, Source: source, SourceID: sourceID,
+		SourceName: drama.SourceName, Title: drama.DisplayTitle(),
 		Description: FirstNonEmpty(drama.Desc, drama.Intro), Cover: cover, Episodes: episodes,
 		Category: nativeDramaCategory(drama), VIP: drama.VIP,
 		Heat: drama.Heat, Views: drama.Views, OnlineDate: ProviderReleaseDate(drama.OnlineDate), Score: NativeDramaScore(drama.Score),

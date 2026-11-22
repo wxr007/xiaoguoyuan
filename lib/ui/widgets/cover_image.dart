@@ -144,6 +144,26 @@ class DramaCover extends StatelessWidget {
               top: 8,
               child: const VipBadge(),
             ),
+          if (details && drama.sourceName.isNotEmpty && !drama.vip && rank == null)
+            Positioned(
+              left: 8,
+              top: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0x99000000),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  drama.sourceName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ),
           if (rank case final rank?)
             Positioned(left: 0, top: 0, child: RankBadge(rank: rank)),
         ],

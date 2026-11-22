@@ -139,7 +139,8 @@ func (p *nasProvider) Detail(ctx context.Context, sourceID string) (Drama, []Cha
 	}
 	drama := Drama{
 		ID: ProviderDramaID("nas", sourceID), Source: "nas", SourceID: sourceID,
-		Title: title, Name: title, Category: category,
+		SourceName: strings.TrimSpace(nfo.Source),
+		Title:      title, Name: title, Category: category,
 		Desc:         strings.TrimSpace(nfo.Plot),
 		Score:        strings.TrimSpace(nfo.Rating),
 		Cover:        nasFileURL(settings, path.Join(sourceID, "poster.jpg")),
@@ -150,9 +151,6 @@ func (p *nasProvider) Detail(ctx context.Context, sourceID string) (Drama, []Cha
 	badge := "共 " + strconv.Itoa(len(chapters)) + " 集"
 	if size != "" {
 		badge += " · " + size
-	}
-	if value := strings.TrimSpace(nfo.Source); value != "" {
-		badge += "\n" + value
 	}
 	drama.Tags = tags
 	drama.Badge = badge

@@ -420,13 +420,53 @@ class _DownloadsPageState extends State<DownloadsPage>
       );
       return;
     }
+    final progress = ValueNotifier<(int, int, String)>(
+      (0, jobs.length, '准备上传'),
+    );
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: const Text('上传到 NAS'),
+            content: ValueListenableBuilder<(int, int, String)>(
+              valueListenable: progress,
+              builder: (context, value, _) => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 12,
+                children: [
+                  LinearProgressIndicator(
+                    value: value.$2 == 0
+                        ? null
+                        : (value.$1 / value.$2).clamp(0, 1),
+                  ),
+                  Text('${value.$1} / ${value.$2}'),
+                  Text(
+                    value.$3,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ).then((_) {}),
+    );
     setState(() => _busy = true);
     try {
       final result = await uploadToNas(
         AppScope.of(context).repository,
         widget.store,
         jobs,
+        onProgress: (done, total, label) {
+          progress.value = (done, total, label);
+        },
       );
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (!mounted) return;
       final parts = <String>[
         '已上传 ${result.uploaded} 集',
@@ -445,11 +485,13 @@ class _DownloadsPageState extends State<DownloadsPage>
       if (result.uploaded > 0) setState(() => _selection = null);
     } catch (error) {
       if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$error')));
       }
     } finally {
+      Future<void>.delayed(const Duration(seconds: 1), progress.dispose);
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -568,13 +610,13 @@ class _DownloadsPageState extends State<DownloadsPage>
                 if (_downloadedTab) ...[
                   IconButton(
                     tooltip: 'NAS 媒体库',
-                    onPressed: () => unawaited(
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => NasLibraryPage(store: widget.store),
-                        ),
-                      ),
-                    ),
+                    onPressed: () => Navigator.of(context)
+                        .push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => NasLibraryPage(store: widget.store),
+                          ),
+                        )
+                        .ignore(),
                     icon: const Icon(Icons.cloud_outlined),
                   ),
                   if (view.downloaded.isNotEmpty)
