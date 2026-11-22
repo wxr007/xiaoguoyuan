@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -127,9 +128,21 @@ func (p *nasProvider) Detail(ctx context.Context, sourceID string) (Drama, []Cha
 	if len(chapters) == 0 {
 		return Drama{}, nil, errors.New("该剧暂时没有可播放的分集")
 	}
+	nfo := nasFetchNfo(ctx, settings, sourceID)
+	title := sourceID
+	if value := strings.TrimSpace(nfo.Title); value != "" {
+		title = value
+	}
+	category := "all"
+	if value := strings.TrimSpace(nfo.Genre); value != "" {
+		category = value
+	}
 	drama := Drama{
 		ID: ProviderDramaID("nas", sourceID), Source: "nas", SourceID: sourceID,
-		Title: sourceID, Name: sourceID, Category: "all",
+		Title: title, Name: title, Category: category,
+		Desc:         strings.TrimSpace(nfo.Plot),
+		Score:        strings.TrimSpace(nfo.Rating),
+		Tags:         nfo.Tags,
 		Cover:        nasFileURL(settings, path.Join(sourceID, "poster.jpg")),
 		TotalEpisode: strconv.Itoa(len(chapters)),
 	}
@@ -275,6 +288,41 @@ func nasRelativeHref(href, root string) string {
 		value = strings.Trim(strings.TrimPrefix(value, root), "/")
 	}
 	return value
+}
+
+type nasShowNfo struct {
+	Title  string   `xml:"title"`
+	Plot   string   `xml:"plot"`
+	Genre  string   `xml:"genre"`
+	Rating string   `xml:"rating"`
+	Tags   []string `xml:"tag"`
+}
+
+func nasFetchNfo(ctx context.Context, settings nasSettings, sourceID string) nasShowNfo {
+	request, err := http.NewRequestWithContext(
+		ctx, "GET", nasFileURL(settings, path.Join(sourceID, "tvshow.nfo")), nil,
+	)
+	if err != nil {
+		return nasShowNfo{}
+	}
+	request.SetBasicAuth(settings.User, settings.Password)
+	response, err := nasHTTPClient.Do(request)
+	if err != nil {
+		return nasShowNfo{}
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return nasShowNfo{}
+	}
+	body, err := io.ReadAll(io.LimitReader(response.Body, 1<<20))
+	if err != nil {
+		return nasShowNfo{}
+	}
+	var nfo nasShowNfo
+	if err := xml.Unmarshal(body, &nfo); err != nil {
+		return nasShowNfo{}
+	}
+	return nfo
 }
 
 func nasVideos(entries []nasEntry) []nasEntry {
