@@ -232,6 +232,21 @@ class WebDavClient {
     }
   }
 
+  Future<bool> exists(String relative) async {
+    try {
+      await _send('PROPFIND', uriFor(relative), depth: '0');
+      return true;
+    } on WebDavException catch (error) {
+      if (error.status == 404) return false;
+      rethrow;
+    }
+  }
+
+  Future<void> uploadText(String relative, String content) async {
+    final bytes = utf8.encode(content);
+    await _send('PUT', uriFor(relative), body: bytes);
+  }
+
   Future<void> uploadFile(
     String relative,
     File file, {

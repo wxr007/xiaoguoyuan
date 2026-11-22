@@ -428,12 +428,17 @@ class _DownloadsPageState extends State<DownloadsPage>
         jobs,
       );
       if (!mounted) return;
-      final failed = result.failures.length;
-      final message = failed == 0
-          ? '已上传 ${result.uploaded} 集'
-                '${result.skipped > 0 ? '，跳过 ${result.skipped} 集' : ''}'
-          : '已上传 ${result.uploaded} 集，$failed 集失败：'
-                '${result.failures.values.first}';
+      final parts = <String>[
+        '已上传 ${result.uploaded} 集',
+        if (result.existing > 0) '已存在 ${result.existing} 集',
+        if (result.skipped > 0) '跳过 ${result.skipped} 集',
+        if (result.failures.isNotEmpty) '失败 ${result.failures.length} 集',
+      ];
+      final message =
+          parts.join('，') +
+          (result.failures.isEmpty
+              ? ''
+              : '：${result.failures.values.first}');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
