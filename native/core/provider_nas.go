@@ -142,10 +142,23 @@ func (p *nasProvider) Detail(ctx context.Context, sourceID string) (Drama, []Cha
 		Title: title, Name: title, Category: category,
 		Desc:         strings.TrimSpace(nfo.Plot),
 		Score:        strings.TrimSpace(nfo.Rating),
-		Tags:         nfo.Tags,
 		Cover:        nasFileURL(settings, path.Join(sourceID, "poster.jpg")),
 		TotalEpisode: strconv.Itoa(len(chapters)),
 	}
+	tags := append([]string{}, nfo.Tags...)
+	size := strings.TrimSpace(nfo.Size)
+	if size != "" {
+		tags = append(tags, "大小 "+size)
+	}
+	if value := strings.TrimSpace(nfo.Source); value != "" {
+		tags = append(tags, "来源 "+value)
+	}
+	badge := "共 " + strconv.Itoa(len(chapters)) + " 集"
+	if size != "" {
+		badge += " · " + size
+	}
+	drama.Tags = tags
+	drama.Badge = badge
 	return drama, chapters, nil
 }
 
@@ -291,11 +304,14 @@ func nasRelativeHref(href, root string) string {
 }
 
 type nasShowNfo struct {
-	Title  string   `xml:"title"`
-	Plot   string   `xml:"plot"`
-	Genre  string   `xml:"genre"`
-	Rating string   `xml:"rating"`
-	Tags   []string `xml:"tag"`
+	Title        string   `xml:"title"`
+	Plot         string   `xml:"plot"`
+	Genre        string   `xml:"genre"`
+	Rating       string   `xml:"rating"`
+	Tags         []string `xml:"tag"`
+	EpisodeCount string   `xml:"episodecount"`
+	Size         string   `xml:"size"`
+	Source       string   `xml:"source"`
 }
 
 func nasFetchNfo(ctx context.Context, settings nasSettings, sourceID string) nasShowNfo {

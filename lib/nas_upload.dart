@@ -36,7 +36,12 @@ String nasRelativePath(Drama drama, int number) {
   return '$title/Season 01/S01E$episode.mp4';
 }
 
-String nasShowNfo(Drama drama) {
+String nasShowNfo(
+  Drama drama, {
+  int episodes = 0,
+  int bytes = 0,
+  String source = '',
+}) {
   final buffer = StringBuffer('<?xml version="1.0" encoding="utf-8"?>\n');
   buffer.writeln('<tvshow>');
   buffer.writeln('  <title>${_escape(drama.title)}</title>');
@@ -48,12 +53,21 @@ String nasShowNfo(Drama drama) {
   if (year > 0) buffer.writeln('  <year>$year</year>');
   final score = drama.score.trim();
   if (score.isNotEmpty) buffer.writeln('  <rating>${_escape(score)}</rating>');
+  if (episodes > 0) buffer.writeln('  <episodecount>$episodes</episodecount>');
+  if (bytes > 0) buffer.writeln('  <size>${_size(bytes)}</size>');
+  if (source.isNotEmpty) buffer.writeln('  <source>${_escape(source)}</source>');
   for (final tag in drama.tags.take(10)) {
     final value = tag.trim();
     if (value.isNotEmpty) buffer.writeln('  <tag>${_escape(value)}</tag>');
   }
   buffer.writeln('</tvshow>');
   return buffer.toString();
+}
+
+String _size(int bytes) {
+  if (bytes < 1 << 20) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+  if (bytes < 1 << 30) return '${(bytes / (1 << 20)).toStringAsFixed(1)} MB';
+  return '${(bytes / (1 << 30)).toStringAsFixed(2)} GB';
 }
 
 String _escape(String value) => value
@@ -119,7 +133,18 @@ Future<NasUploadResult> uploadToNas(
     } catch (_) {}
 
     try {
-      await client.uploadText(nasNfoPath(drama), nasShowNfo(drama));
+      final episodes = group.length;
+      final bytes = group.fold<int>(0, (sum, job) => sum + job.bytes);
+      final source = SourceSite.byId(drama.source).name;
+      await client.uploadText(
+        nasNfoPath(drama),
+        nasShowNfo(
+          drama,
+          episodes: episodes,
+          bytes: bytes,
+          source: source,
+        ),
+      );
     } catch (_) {}
 
     for (final job in group) {
