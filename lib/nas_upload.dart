@@ -119,10 +119,7 @@ Future<NasUploadResult> uploadToNas(
     } catch (_) {}
 
     try {
-      final nfo = nasNfoPath(drama);
-      if (!await client.exists(nfo)) {
-        await client.uploadText(nfo, nasShowNfo(drama));
-      }
+      await client.uploadText(nasNfoPath(drama), nasShowNfo(drama));
     } catch (_) {}
 
     for (final job in group) {
