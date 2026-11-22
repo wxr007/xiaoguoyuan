@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../local_store.dart';
 import '../../nas_config_server.dart';
@@ -96,7 +97,21 @@ class _NasViewState extends State<NasView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 12,
             children: [
-              const Text('在同一 Wi-Fi 下，用手机浏览器打开：'),
+              const Text('在同一 Wi-Fi 下，用手机扫码打开：'),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: QrImageView(
+                    data: address,
+                    size: 180,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+              ),
               SelectableText(
                 address,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
