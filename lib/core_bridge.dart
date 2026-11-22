@@ -203,6 +203,9 @@ abstract class AppRepository {
   Future<void> controlDownloads(String command, {String id = ''}) async {}
   Future<DownloadConversion> beginConversion(String id) async =>
       throw AppFailure('当前环境不支持处理下载');
+  Future<({int queued, int skipped})> queueConversions(
+    List<String> ids,
+  ) async => (queued: 0, skipped: 0);
   Future<void> finishConversion(String id, String result) async {}
   Future<DownloadBatchResult> controlDownloadBatch(
     String command,
@@ -1215,6 +1218,19 @@ class NativeRepository extends AppRepository {
       input: result['input'] as String? ?? '',
       key: result['key'] as String? ?? '',
       output: result['output'] as String? ?? '',
+    );
+  }
+
+  @override
+  Future<({int queued, int skipped})> queueConversions(List<String> ids) async {
+    if (ids.isEmpty) return (queued: 0, skipped: 0);
+    final result = await _call({
+      'action': 'queueConversions',
+      'jobIds': ids,
+    });
+    return (
+      queued: (result['queued'] as num?)?.toInt() ?? 0,
+      skipped: (result['skipped'] as num?)?.toInt() ?? 0,
     );
   }
 

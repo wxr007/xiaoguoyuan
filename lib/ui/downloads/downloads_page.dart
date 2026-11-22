@@ -314,8 +314,59 @@ class _DownloadsPageState extends State<DownloadsPage>
   }
 
   List<Widget> _selectionActions(_View view) => _downloadedTab
-      ? [_mergeSelectedButton(view), _removeSelectedButton(view)]
+      ? [
+          _convertSelectedButton(view),
+          _mergeSelectedButton(view),
+          _removeSelectedButton(view),
+        ]
       : [_cancelButton(view)];
+
+  Widget _convertSelectedButton(_View view) {
+    final selection = view.selection!;
+    return FocusRing(
+      radius: 20,
+      child: FilledButton.icon(
+        onPressed: selection.isEmpty || _busy
+            ? null
+            : () => _convertSelected(view),
+        icon: const Icon(Icons.movie_creation_outlined, size: 18),
+        label: const Text('转 MP4'),
+      ),
+    );
+  }
+
+  Future<void> _convertSelected(_View view) async {
+    final ids = [
+      for (final item in view.downloaded)
+        if (view.selection!.contains(item.drama.id))
+          for (final job in item.episodes) job.id,
+    ];
+    if (ids.isEmpty) return;
+    setState(() => _busy = true);
+    try {
+      final result = await AppScope.of(
+        context,
+      ).repository.queueConversions(ids);
+      if (!mounted) return;
+      final message = result.queued == 0
+          ? '没有可转换的分集，可能已转换、文件不完整或站源未安装'
+          : '已加入 ${result.queued} 集，切换到「下载中」查看进度'
+                '${result.skipped > 0 ? '；跳过 ${result.skipped} 集' : ''}';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      await widget.downloads.refresh();
+      if (result.queued > 0 && mounted) setState(() => _selection = null);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   Widget _removeSelectedButton(_View view) {
     final colors = Theme.of(context).colorScheme;
@@ -345,7 +396,7 @@ class _DownloadsPageState extends State<DownloadsPage>
             ? null
             : () => _mergeSelected(view),
         icon: const Icon(Icons.merge_rounded, size: 18),
-        label: Text(selection.isEmpty ? '合并' : '各自合并 ${selection.length} 部'),
+        label: Text(selection.isEmpty ? '合并' : '合并 ${selection.length}'),
       ),
     );
   }

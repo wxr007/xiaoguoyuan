@@ -132,6 +132,40 @@ func (manager *nativeDownloads) removeFiles(record nativeDownloadRecord) error {
 	return nil
 }
 
+func (manager *nativeDownloads) queueConversions(ids []string) (int, int, error) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+	if manager.loadErr != nil {
+		return 0, 0, manager.loadErr
+	}
+	if manager.moving {
+		return 0, 0, errors.New("下载目录正在迁移，请稍后重试")
+	}
+	queued := make([]*nativeDownloadRecord, 0, len(ids))
+	skipped := 0
+	for _, id := range ids {
+		record := manager.jobs[id]
+		if record == nil || record.State != "completed" || record.File == "" || record.Output != "" ||
+			!nativeDownloadAvailable(record.nativeDownloadJob) || !manager.rawFilesValid(*record) {
+			skipped++
+			continue
+		}
+		record.State = "converting"
+		record.Error = ""
+		queued = append(queued, record)
+	}
+	if len(queued) == 0 {
+		return 0, skipped, nil
+	}
+	if err := manager.saveLocked(); err != nil {
+		for _, record := range queued {
+			record.State = "completed"
+		}
+		return 0, 0, err
+	}
+	return len(queued), skipped, nil
+}
+
 func (manager *nativeDownloads) beginConversion(id string) (nativeDownloadConversion, error) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()

@@ -436,6 +436,9 @@ func nativeDispatch(input nativeInput) (any, error) {
 		return map[string]int{"added": added}, err
 	case "controlDownloads":
 		return true, engine.downloads.control(input.JobID, input.Command)
+	case "queueConversions":
+		queued, skipped, err := engine.downloads.queueConversions(input.JobIDs)
+		return map[string]int{"queued": queued, "skipped": skipped}, err
 	case "beginConversion":
 		return engine.downloads.beginConversion(input.JobID)
 	case "finishConversion":
