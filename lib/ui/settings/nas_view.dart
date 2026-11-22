@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../local_store.dart';
+import '../../nas_config_server.dart';
 import '../../webdav_client.dart';
 import '../app_scope.dart';
 import '../widgets/group_card.dart';
@@ -78,6 +79,48 @@ class _NasViewState extends State<NasView> {
     return '已保存';
   });
 
+  Future<void> _shareToPhone() async {
+    final server = NasConfigServer(
+      store: widget.store,
+      repository: AppScope.of(context).repository,
+    );
+    try {
+      final address = await server.start();
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('用手机填写'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12,
+            children: [
+              const Text('在同一 Wi-Fi 下，用手机浏览器打开：'),
+              SelectableText(
+                address,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Text('保存后电视端立即生效。关闭此窗口会停止服务。'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (mounted) setState(() => _error = '无法启动配置服务：$error');
+    } finally {
+      await server.stop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -154,6 +197,11 @@ class _NasViewState extends State<NasView> {
                         ),
                       ),
                     ],
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _busy ? null : _shareToPhone,
+                    icon: const Icon(Icons.phone_android_rounded, size: 18),
+                    label: const Text('用手机填写'),
                   ),
                 ],
               ),
