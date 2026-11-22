@@ -3,6 +3,24 @@ name: Build app packages
 on:
   push:
     branches: [main]
+    paths:
+      - 'lib/**'
+      - 'native/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'macos/**'
+      - 'windows/**'
+      - 'assets/**'
+      - 'packages/**'
+      - 'bundled-modules/**'
+      - 'scripts/app_build.py'
+      - 'scripts/build_*.py'
+      - 'scripts/generate_brand_assets.py'
+      - 'scripts/package_release.py'
+      - 'scripts/brand_icon.svg'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/build.yml'
   workflow_dispatch:
 
 permissions:
