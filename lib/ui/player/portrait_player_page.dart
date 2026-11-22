@@ -610,6 +610,9 @@ class _PortraitPlayerPageState extends State<PortraitPlayerPage>
                   behavior: HitTestBehavior.opaque,
                   onTap: _pinching || _session.locked
                       ? null
+                      : () => setState(_wake),
+                  onDoubleTap: _pinching || _session.locked
+                      ? null
                       : session.togglePlayback,
                   onLongPressStart: _pinching || _session.locked
                       ? null
