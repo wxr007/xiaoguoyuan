@@ -10,6 +10,7 @@ import 'download_export.dart';
 import 'download_overview.dart';
 import 'media_pipeline.dart';
 import 'models.dart';
+import 'nas_upload.dart';
 
 class DownloadConverter extends ChangeNotifier {
   DownloadConverter(this.repository, this.downloads, {MediaExecutor? executor})
@@ -126,7 +127,22 @@ class DownloadConverter extends ChangeNotifier {
         _sync();
       }
     }
-    if (result == 'done') await _export(job);
+    if (result == 'done') {
+      await _export(job);
+      await _upload(job);
+    }
+  }
+
+  Future<void> _upload(DownloadJob job) async {
+    final store = downloads.store;
+    if (!store.nasAutoUpload || !store.nasConfigured || _disposed) return;
+    try {
+      await uploadToNas(repository, store, [job]);
+    } catch (error) {
+      DiaryService.add(
+        '[下载] ${job.drama.title} 第 ${job.episode.number} 集上传 NAS 失败：$error',
+      );
+    }
   }
 
   Future<void> _export(DownloadJob job) async {

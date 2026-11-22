@@ -157,6 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
       SettingsGroup.download =>
         Platform.isAndroid ? '默认画质、同时下载数量、自动导出' : '默认画质、VIP 集、同时下载数量',
       SettingsGroup.storage => '下载目录、清理缓存、删除全部数据',
+      SettingsGroup.nas => 'WebDAV 地址、同步到 NAS',
       SettingsGroup.proxy => '连接方式、代理地址',
       SettingsGroup.users => '当前：${store.profile.name}',
       SettingsGroup.about =>

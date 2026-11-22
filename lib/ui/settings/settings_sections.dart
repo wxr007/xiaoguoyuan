@@ -28,6 +28,7 @@ import 'backup_actions.dart';
 import 'boss_key_tile.dart';
 import 'diary_view.dart';
 import 'settings_rows.dart';
+import 'nas_view.dart';
 import 'storage_view.dart';
 
 enum SettingsGroup {
@@ -37,6 +38,7 @@ enum SettingsGroup {
   slacking('摸鱼', Icons.set_meal_outlined),
   download('下载', Icons.download_rounded),
   storage('存储', Icons.folder_outlined),
+  nas('NAS', Icons.cloud_outlined),
   proxy('代理', Icons.language_rounded),
   users('用户', Icons.manage_accounts_outlined),
   about('关于', Icons.info_outline_rounded),
@@ -108,6 +110,7 @@ class SettingsSection extends StatelessWidget {
               SettingsGroup.slacking => _slacking(context),
               SettingsGroup.download => _download(context),
               SettingsGroup.storage => _storage(),
+              SettingsGroup.nas => [NasView(store: store)],
               SettingsGroup.proxy => _proxy(context),
               SettingsGroup.users => [UsersView(store: store, open: open)],
               SettingsGroup.about => _about(context),

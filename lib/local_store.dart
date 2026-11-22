@@ -459,6 +459,11 @@ class LocalStore extends ChangeNotifier {
     _ => fallback,
   };
 
+  String _text(String key) => switch (_settings[key]) {
+    final String value => value,
+    _ => '',
+  };
+
   String get displayMode {
     final value = _settings['displayMode'];
     return _displayModes.contains(value) ? value as String : 'auto';
@@ -498,6 +503,12 @@ class LocalStore extends ChangeNotifier {
   bool get blurAllCovers => _flag('blurAllCovers', true);
   bool get checkUpdates => _flag('checkUpdates', true);
   bool get autoExport => _flag('exportAfterDownload', false);
+  String get nasUrl => _text('nasUrl');
+  String get nasUser => _text('nasUser');
+  String get nasPassword => _text('nasPassword');
+  String get nasRoot => _text('nasRoot');
+  bool get nasAutoUpload => _flag('nasAutoUpload', false);
+  bool get nasConfigured => nasUrl.trim().isNotEmpty;
   bool get deleteAfterAutoExport => _flag('deleteAfterAutoExport', false);
   bool get deleteAfterManualExport => _flag('deleteAfterManualExport', false);
   bool get shareUsage => _flag('shareUsage', true);
@@ -613,6 +624,23 @@ class LocalStore extends ChangeNotifier {
   Future<void> setThemeMode(String value) => _themeModes.contains(value)
       ? _setting('themeMode', value)
       : Future.value();
+  Future<void> setNasConfig({
+    required String url,
+    required String user,
+    required String password,
+    required String root,
+  }) => _queue(() async {
+    _requireAdmin();
+    await _saveSettings({
+      ..._settings,
+      'nasUrl': url.trim(),
+      'nasUser': user.trim(),
+      'nasPassword': password,
+      'nasRoot': root.trim(),
+    });
+  });
+  Future<void> setNasAutoUpload(bool value) =>
+      _setting('nasAutoUpload', value);
   Future<void> setFollowSystemColor(bool value) =>
       _setting('followSystemColor', value);
   Future<void> setThemeColor(ThemeColor value) =>

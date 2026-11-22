@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../download_collections.dart';
 import '../../download_converter.dart';
+import '../../nas_upload.dart';
 import '../../download_overview.dart';
 import '../../local_store.dart';
 import '../../merge_queue.dart';
@@ -13,6 +16,7 @@ import '../theme/motion.dart';
 import '../widgets/cover_image.dart';
 import '../widgets/drama_grid.dart';
 import '../widgets/drama_tile.dart';
+import '../nas/nas_library_page.dart';
 import '../widgets/focus_ring.dart';
 import '../widgets/motion/motion_widgets.dart';
 import '../widgets/status_view.dart';
@@ -316,22 +320,54 @@ class _DownloadsPageState extends State<DownloadsPage>
   List<Widget> _selectionActions(_View view) => _downloadedTab
       ? [
           _convertSelectedButton(view),
+          _uploadSelectedButton(view),
           _mergeSelectedButton(view),
           _removeSelectedButton(view),
         ]
       : [_cancelButton(view)];
 
+  Widget _actionButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    Color? background,
+    Color? foreground,
+  }) => FocusRing(
+    radius: 20,
+    child: Tooltip(
+      message: tooltip,
+      child: FilledButton(
+        style: background == null
+            ? null
+            : FilledButton.styleFrom(
+                backgroundColor: background,
+                foregroundColor: foreground,
+              ),
+        onPressed: onPressed,
+        child: Icon(icon, size: 20),
+      ),
+    ),
+  );
+
   Widget _convertSelectedButton(_View view) {
     final selection = view.selection!;
-    return FocusRing(
-      radius: 20,
-      child: FilledButton.icon(
-        onPressed: selection.isEmpty || _busy
-            ? null
-            : () => _convertSelected(view),
-        icon: const Icon(Icons.movie_creation_outlined, size: 18),
-        label: const Text('转 MP4'),
-      ),
+    return _actionButton(
+      icon: Icons.movie_creation_outlined,
+      tooltip: '转换成 MP4',
+      onPressed: selection.isEmpty || _busy
+          ? null
+          : () => _convertSelected(view),
+    );
+  }
+
+  Widget _uploadSelectedButton(_View view) {
+    final selection = view.selection!;
+    return _actionButton(
+      icon: Icons.cloud_upload_outlined,
+      tooltip: '上传到 NAS',
+      onPressed: selection.isEmpty || _busy
+          ? null
+          : () => _uploadSelected(view),
     );
   }
 
@@ -368,36 +404,69 @@ class _DownloadsPageState extends State<DownloadsPage>
     }
   }
 
+  Future<void> _uploadSelected(_View view) async {
+    final jobs = [
+      for (final item in view.downloaded)
+        if (view.selection!.contains(item.drama.id)) ...item.episodes,
+    ];
+    if (jobs.isEmpty) return;
+    if (!widget.store.nasConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先在 设置 › NAS 中填写地址')),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final result = await uploadToNas(
+        AppScope.of(context).repository,
+        widget.store,
+        jobs,
+      );
+      if (!mounted) return;
+      final failed = result.failures.length;
+      final message = failed == 0
+          ? '已上传 ${result.uploaded} 集'
+                '${result.skipped > 0 ? '，跳过 ${result.skipped} 集' : ''}'
+          : '已上传 ${result.uploaded} 集，$failed 集失败：'
+                '${result.failures.values.first}';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      if (result.uploaded > 0) setState(() => _selection = null);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Widget _removeSelectedButton(_View view) {
     final colors = Theme.of(context).colorScheme;
     final selection = view.selection!;
-    return FocusRing(
-      radius: 20,
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          backgroundColor: colors.error,
-          foregroundColor: colors.onError,
-        ),
-        onPressed: selection.isEmpty || _busy
-            ? null
-            : () => _removeSelected(view),
-        icon: const Icon(Icons.delete_outline_rounded, size: 18),
-        label: const Text('删除'),
-      ),
+    return _actionButton(
+      icon: Icons.delete_outline_rounded,
+      tooltip: '删除',
+      background: colors.error,
+      foreground: colors.onError,
+      onPressed: selection.isEmpty || _busy
+          ? null
+          : () => _removeSelected(view),
     );
   }
 
   Widget _mergeSelectedButton(_View view) {
     final selection = view.selection!;
-    return FocusRing(
-      radius: 20,
-      child: FilledButton.icon(
-        onPressed: selection.isEmpty || _busy
-            ? null
-            : () => _mergeSelected(view),
-        icon: const Icon(Icons.merge_rounded, size: 18),
-        label: Text(selection.isEmpty ? '合并' : '合并 ${selection.length}'),
-      ),
+    return _actionButton(
+      icon: Icons.merge_rounded,
+      tooltip: selection.length <= 1 ? '合并' : '合并 ${selection.length} 部',
+      onPressed: selection.isEmpty || _busy
+          ? null
+          : () => _mergeSelected(view),
     );
   }
 
@@ -487,8 +556,21 @@ class _DownloadsPageState extends State<DownloadsPage>
                   ),
                   _editButton(view, icon: false),
                 ],
-                if (_downloadedTab && view.downloaded.isNotEmpty)
-                  _editButton(view, icon: false),
+                if (_downloadedTab) ...[
+                  IconButton(
+                    tooltip: 'NAS 媒体库',
+                    onPressed: () => unawaited(
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => NasLibraryPage(store: widget.store),
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.cloud_outlined),
+                  ),
+                  if (view.downloaded.isNotEmpty)
+                    _editButton(view, icon: false),
+                ],
                 if (_mergeTab) _clearMerges(icon: false),
                 const SizedBox(width: 8),
               ],
