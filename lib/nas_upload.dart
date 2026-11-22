@@ -33,7 +33,7 @@ String nasNfoPath(Drama drama) => '${nasFolder(drama)}/tvshow.nfo';
 String nasRelativePath(Drama drama, int number) {
   final title = nasFolder(drama);
   final episode = '$number'.padLeft(2, '0');
-  return '$title/Season 01/$title - S01E$episode.mp4';
+  return '$title/Season 01/S01E$episode.mp4';
 }
 
 String nasShowNfo(Drama drama) {
