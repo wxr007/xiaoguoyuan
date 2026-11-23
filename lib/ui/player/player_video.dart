@@ -8,7 +8,6 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../playback_preferences.dart';
 import '../../playback_session.dart';
-import 'audio_artwork.dart';
 import 'playback_handle.dart';
 
 class PlayerVideo extends StatelessWidget {
@@ -23,16 +22,7 @@ class PlayerVideo extends StatelessWidget {
   final VideoFit fit;
 
   @override
-  Widget build(BuildContext context) => StreamBuilder(
-    stream: player.stream.tracks,
-    initialData: player.state.tracks,
-    builder: (context, snapshot) {
-      final session = handle.session;
-      return session.audio || audioOnly(snapshot.requireData)
-          ? AudioArtwork(drama: session.detail.drama)
-          : _video(context);
-    },
-  );
+  Widget build(BuildContext context) => _video(context);
 
   Widget _video(BuildContext context) {
     final controller = handle.video(player);

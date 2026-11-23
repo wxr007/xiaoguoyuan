@@ -45,15 +45,6 @@ Size? videoDisplaySize(VideoParams parameters) {
       : Size(width.toDouble(), height.toDouble());
 }
 
-bool audioOnly(Tracks tracks) {
-  bool real(String id) => id != 'auto' && id != 'no';
-  return tracks.audio.any((track) => real(track.id)) &&
-      !tracks.video.any(
-        (track) =>
-            real(track.id) && track.albumart != true && track.image != true,
-      );
-}
-
 String _diagnostic(Object error) {
   final text = error.toString().replaceAll(
     RegExp(r'[a-z]+://\S+', caseSensitive: false),
@@ -119,11 +110,8 @@ class PlaybackSession extends ChangeNotifier {
       unawaited(subscription.cancel());
     }
     _subscriptions.clear();
-    _audioProbe?.cancel();
-    _audioDetected = false;
     final size = videoDisplaySize(player.state.videoParams);
     if (size != null) _videoSize = size;
-    _probeAudio();
     _buffering(player.state.buffering);
     final stream = player.stream;
     _subscriptions.addAll([
@@ -151,22 +139,10 @@ class PlaybackSession extends ChangeNotifier {
       }),
       for (final changes in [stream.duration, stream.buffer, stream.rate])
         changes.listen((_) => _sync()),
-      stream.tracks.listen((tracks) {
-        if (_audioDetected) return;
-        if (!audioOnly(tracks)) {
-          _audioProbe?.cancel();
-          return;
-        }
-        _probeAudio();
-      }),
       stream.videoParams.listen((parameters) {
         final size = videoDisplaySize(parameters);
         if (size == null || _closed) return;
         _videoSize = size;
-        if (_audioDetected) {
-          _audioDetected = false;
-          _audioProbe?.cancel();
-        }
         _notify();
         unawaited(_logVideoOutput(parameters));
       }),
@@ -264,8 +240,6 @@ class PlaybackSession extends ChangeNotifier {
   bool _locked = false;
   bool _engaged;
   bool _staleAudio = false;
-  bool _audioDetected = false;
-  Timer? _audioProbe;
   bool _stalled = false;
   String _loadingMessage = '正在准备播放';
   String? _error;
@@ -312,19 +286,7 @@ class PlaybackSession extends ChangeNotifier {
     null => 9 / 16,
   };
   bool get aspectKnown => _videoSize != null;
-  bool get audio => episode.audio || _audioDetected;
-
-  void _probeAudio() {
-    if (_audioDetected) return;
-    _audioProbe?.cancel();
-    if (!audioOnly(player.state.tracks)) return;
-    _audioProbe = Timer(const Duration(seconds: 2), () {
-      if (_closed || _audioDetected) return;
-      if (!audioOnly(player.state.tracks)) return;
-      _audioDetected = true;
-      _notify();
-    });
-  }
+  bool get audio => episode.audio;
   VideoFit get videoFit => _videoFit;
   double get speed => _speed;
   DateTime? get sleepAt => _sleepAt;
@@ -1623,7 +1585,6 @@ class PlaybackSession extends ChangeNotifier {
     MediaControls.instance.release(this);
     _saveTimer?.cancel();
     _healthTimer?.cancel();
-    _audioProbe?.cancel();
     _errorTimer?.cancel();
     _boostTimer?.cancel();
     _stallTimer?.cancel();
