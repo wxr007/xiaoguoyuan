@@ -35,9 +35,8 @@ import 'motion/motion_widgets.dart';
 }
 
 bool _landscapeGrid(BuildContext context) {
-  final store = AppScope.of(context).repository.access;
-  if (store == null) return false;
-  return store.landscapeCover(store.source);
+  final repository = AppScope.of(context).repository;
+  return repository.landscapeCover(repository.currentSource);
 }
 
 double dramaTileWidth(BuildContext context, double width) {
@@ -331,10 +330,16 @@ class _DramaGridSkeletonState extends State<DramaGridSkeleton>
         builder: (context, constraints) {
           final padding = widget.padding;
           final width = constraints.maxWidth - padding.horizontal;
-          final (columns, _, runSpacing) = _gridLayout(context, width);
+          final landscape = _landscapeGrid(context);
+          final (columns, _, runSpacing) = _gridLayout(
+            context,
+            width,
+            landscape: landscape,
+          );
           final extent = DramaTile.extentFor(
             context,
             dramaTileWidth(context, width),
+            landscape: landscape,
           );
           final rows = constraints.hasBoundedHeight
               ? ((constraints.maxHeight - padding.vertical) /

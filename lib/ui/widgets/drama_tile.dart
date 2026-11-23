@@ -156,11 +156,16 @@ class DramaTile extends StatelessWidget {
     color: Theme.of(context).colorScheme.onSurfaceVariant,
   );
 
-  static double extentFor(BuildContext context, double width) {
+  static double extentFor(
+    BuildContext context,
+    double width, {
+    bool landscape = false,
+  }) {
     final scaler = MediaQuery.textScalerOf(context);
     final title = scaler.scale(titleStyle(context).fontSize!) * 1.3 * 2;
     final subtitle = scaler.scale(subtitleStyle(context).fontSize!) * 1.3;
-    return (width * 1.5 + 9 + title + 4 + subtitle).ceilToDouble();
+    return (width * (landscape ? 9 / 16 : 1.5) + 9 + title + 4 + subtitle)
+        .ceilToDouble();
   }
 
   @override

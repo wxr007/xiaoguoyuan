@@ -210,6 +210,7 @@ abstract class AppRepository {
   ) async => (queued: 0, skipped: 0);
   Future<void> ensureDownloadCovers() async {}
   bool landscapeCover(String source) => false;
+  String get currentSource => '';
   Future<void> setNasConfig({
     required String url,
     required String user,
@@ -1255,6 +1256,9 @@ class NativeRepository extends AppRepository {
   @override
   bool landscapeCover(String source) =>
       access?.landscapeCover(source) ?? false;
+
+  @override
+  String get currentSource => access?.source ?? '';
 
   @override
   Future<void> ensureDownloadCovers() async {
