@@ -56,10 +56,10 @@ func (manager *nativeDownloads) transferMedia(ctx context.Context, job nativeDow
 		bundle.assets = []nativeDownloadAsset{{address: media.URL, name: entry}}
 	}
 	directory := manager.jobDirectory(job)
-	identity := entry + "\x00" + media.URL + "\x00" + hex.EncodeToString(media.CENCKey) + "\x00" + strconv.Itoa(bundle.quality)
+	identity := entry + "\x00" + job.ID + "\x00" + hex.EncodeToString(media.CENCKey) + "\x00" + strconv.Itoa(bundle.quality)
 	if hls {
 		for _, asset := range bundle.assets {
-			identity += "\x00" + asset.address + "\x00" + string(asset.data)
+			identity += "\x00" + asset.name + "\x00" + string(asset.data)
 		}
 		encoded, _ := json.Marshal(bundle.playlists)
 		identity += "\x00" + string(encoded)
@@ -148,7 +148,9 @@ func (manager *nativeDownloads) downloadFile(ctx context.Context, address, refer
 		_ = json.Unmarshal(data, &metadata)
 	}
 	if metadata.URL != address {
-		metadata = nativeDownloadFileState{}
+		// 站源地址带时效签名，恢复下载时地址会变；保留已下载进度与总大小
+		metadata = nativeDownloadFileState{Total: metadata.Total}
+		metadata.URL = address
 	}
 	if metadata.Complete {
 		if info, err := os.Stat(target); err == nil && info.Size() == metadata.Total && info.Size() > 0 && (!key || info.Size() == 16) {
@@ -158,7 +160,7 @@ func (manager *nativeDownloads) downloadFile(ctx context.Context, address, refer
 	}
 	partial := target + ".part"
 	offset := int64(0)
-	if metadata.Validator != "" && !key {
+	if !key {
 		if info, err := os.Stat(partial); err == nil && info.Size() > 0 && (metadata.Total <= 0 || info.Size() <= metadata.Total) {
 			offset = info.Size()
 		}
@@ -190,7 +192,9 @@ func (manager *nativeDownloads) downloadFileAttempt(ctx context.Context, address
 	request.Header.Set("Accept-Encoding", "identity")
 	if offset > 0 {
 		request.Header.Set("Range", fmt.Sprintf("bytes=%d-", offset))
-		request.Header.Set("If-Range", old.Validator)
+		if old.Validator != "" {
+			request.Header.Set("If-Range", old.Validator)
+		}
 	}
 	client := *manager.engine.downloader.client
 	client.Timeout = 0
@@ -232,7 +236,7 @@ func (manager *nativeDownloads) downloadFileAttempt(ctx context.Context, address
 		if !valid || start != offset || (response.ContentLength >= 0 && response.ContentLength != end-start+1) {
 			return 0, false, errors.New("服务器返回的续传范围不正确，已停止下载")
 		}
-		if offset > 0 && ((validator != "" && validator != old.Validator) || (old.Total > 0 && old.Total != full)) {
+		if offset > 0 && ((old.Validator != "" && validator != "" && validator != old.Validator) || (old.Total > 0 && old.Total != full)) {
 			return 0, true, nil
 		}
 		total = full
