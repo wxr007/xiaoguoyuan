@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
@@ -860,22 +861,70 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  Widget _cover(Drama drama, _Metrics m) => DecoratedBox(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(m.coverRadius),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x4D000000),
-          blurRadius: 26,
-          offset: Offset(0, 10),
-        ),
-      ],
-    ),
-    child: SizedBox.fromSize(
-      size: m.cover,
-      child: DramaCover(drama: drama, radius: m.coverRadius),
+  Widget _cover(Drama drama, _Metrics m) => GestureDetector(
+    onTap: () => unawaited(_showPoster(drama)),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(m.coverRadius),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x4D000000),
+            blurRadius: 26,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: SizedBox.fromSize(
+        size: m.cover,
+        child: DramaCover(drama: drama, radius: m.coverRadius),
+      ),
     ),
   );
+
+  Future<void> _showPoster(Drama drama) async {
+    final repository = AppScope.of(context).repository;
+    String path;
+    try {
+      path = await repository.cover(drama);
+    } catch (_) {
+      return;
+    }
+    if (!mounted || path.isEmpty) return;
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (context) => Dialog.fullscreen(
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 4,
+                child: Center(
+                  child: Image.file(
+                    File(path),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  tooltip: '关闭',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _headline(
     DramaDetails details,
