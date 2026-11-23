@@ -25,7 +25,30 @@ class _NasViewState extends State<NasView> {
   String? _success;
 
   @override
+  void initState() {
+    super.initState();
+    widget.store.addListener(_syncFromStore);
+  }
+
+  void _syncFromStore() {
+    if (!mounted) return;
+    _syncField(_url, widget.store.nasUrl);
+    _syncField(_user, widget.store.nasUser);
+    _syncField(_password, widget.store.nasPassword);
+    _syncField(_root, widget.store.nasRoot);
+  }
+
+  void _syncField(TextEditingController controller, String value) {
+    if (controller.text == value) return;
+    controller.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
+
+  @override
   void dispose() {
+    widget.store.removeListener(_syncFromStore);
     _url.dispose();
     _user.dispose();
     _password.dispose();
