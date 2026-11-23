@@ -240,9 +240,6 @@ class ProgressPoster extends StatelessWidget {
     return SizedBox(
       width: width,
       child: _PosterButton(
-        landscape: AppScope.of(context).repository.landscapeCover(
-          drama.source,
-        ),
         cover: Stack(
           fit: StackFit.expand,
           children: [
