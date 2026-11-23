@@ -119,6 +119,8 @@ class PlaybackSession extends ChangeNotifier {
       unawaited(subscription.cancel());
     }
     _subscriptions.clear();
+    _audioProbe?.cancel();
+    _audioDetected = false;
     final size = videoDisplaySize(player.state.videoParams);
     if (size != null) _videoSize = size;
     _probeAudio();
