@@ -562,39 +562,37 @@ class SettingsSection extends StatelessWidget {
     ResourceSettings settings,
     bool editable,
   ) {
-    final groups = <String, String>{
-      for (final site in SourceSite.allValues) site.groupId: site.groupName,
-    };
-    if (groups.isEmpty) return const [];
+    final sites = SourceSite.values;
+    if (sites.isEmpty) return const [];
     return [
       const _Note('站源单独设置后，该站源的请求、播放与下载优先使用这里的方式'),
       SettingsCard(
         children: [
-          for (final MapEntry(key: group, value: name) in groups.entries) ...[
+          for (final site in sites) ...[
             ValueTile<String>(
-              title: name,
+              title: site.name,
               options: _sourceProxyModes,
-              value: settings.sourceProxies[group]?.mode ?? 'follow',
+              value: settings.sourceProxies[site.id]?.mode ?? 'follow',
               onChanged: editable
                   ? (value) => switch (value) {
-                      'manual' => _editSourceProxy(context, settings, group),
+                      'manual' => _editSourceProxy(context, settings, site.id),
                       'follow' => _saveResource(
                         context,
-                        settings.withSourceProxy(group, null),
+                        settings.withSourceProxy(site.id, null),
                       ),
                       _ => _saveResource(
                         context,
-                        settings.withSourceProxy(group, SourceProxy(value)),
+                        settings.withSourceProxy(site.id, SourceProxy(value)),
                       ),
                     }
                   : null,
             ),
-            if (settings.sourceProxies[group]?.mode == 'manual')
+            if (settings.sourceProxies[site.id]?.mode == 'manual')
               SettingsTile(
-                title: '$name · 代理地址',
+                title: '${site.name} · 代理地址',
                 value: '已设置',
                 enabled: editable,
-                onTap: () => _editSourceProxy(context, settings, group),
+                onTap: () => _editSourceProxy(context, settings, site.id),
               ),
           ],
         ],

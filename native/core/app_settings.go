@@ -116,13 +116,14 @@ func (router *proxyRouter) proxy(request *http.Request) (*url.URL, error) {
 	if request.URL.Hostname() == "127.0.0.1" || request.URL.Hostname() == "localhost" || request.URL.Hostname() == "::1" {
 		return nil, nil
 	}
-	group := ""
-	if source, _ := request.Context().Value(proxySourceKey{}).(string); source != "" {
-		group = proxyGroup(source)
-	}
+	source, _ := request.Context().Value(proxySourceKey{}).(string)
 	router.mu.RLock()
 	mode, manual := router.mode, router.manual
-	if route, ok := router.sources[group]; ok {
+	route, ok := router.sources[source]
+	if !ok && source != "" {
+		route, ok = router.sources[proxyGroup(source)]
+	}
+	if ok {
 		mode, manual = route.mode, route.manual
 	}
 	router.mu.RUnlock()
