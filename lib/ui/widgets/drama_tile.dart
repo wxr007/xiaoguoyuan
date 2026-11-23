@@ -20,9 +20,11 @@ class _PosterButton extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.checked,
+    this.landscape = false,
   });
   final Widget cover;
   final List<Widget> caption;
+  final bool landscape;
   final String label;
   final VoidCallback onTap;
   final VoidCallback? onMore;
@@ -58,7 +60,7 @@ class _PosterButtonState extends State<_PosterButton> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AspectRatio(
-            aspectRatio: 2 / 3,
+            aspectRatio: widget.landscape ? 16 / 9 : 2 / 3,
             child: FocusOutline(
               visible: visible,
               radius: _coverRadius,
@@ -163,6 +165,7 @@ class DramaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _PosterButton(
+    landscape: AppScope.of(context).repository.landscapeCover(drama.source),
     cover: DramaCover(
       drama: drama,
       radius: _coverRadius,
@@ -227,6 +230,9 @@ class ProgressPoster extends StatelessWidget {
     return SizedBox(
       width: width,
       child: _PosterButton(
+        landscape: AppScope.of(context).repository.landscapeCover(
+          drama.source,
+        ),
         cover: Stack(
           fit: StackFit.expand,
           children: [

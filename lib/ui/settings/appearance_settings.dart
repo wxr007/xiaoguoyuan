@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../local_store.dart';
+import '../../models.dart';
 import '../../theme_color.dart';
 import '../app_scope.dart';
 import '../theme/motion.dart';
@@ -236,6 +237,38 @@ class AppearanceSettings extends StatelessWidget {
                 }
               },
             ),
+          ],
+        ),
+        GroupCard(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  Text('横版海报', style: text.titleSmall),
+                  Text(
+                    '开启后该站源的封面按 16:9 展示，其余保持竖版',
+                    style: text.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final site in SourceSite.values) ...[
+              const Divider(indent: 16, endIndent: 16),
+              SwitchTile(
+                title: site.name,
+                subtitle: '16:9 横版展示',
+                value: store.landscapeCover(site.id),
+                onChanged: (value) => saveSetting(
+                  context,
+                  () => store.setLandscapeCover(site.id, value),
+                ),
+              ),
+            ],
           ],
         ),
       ],

@@ -509,6 +509,20 @@ class LocalStore extends ChangeNotifier {
   String get nasRoot => _text('nasRoot');
   bool get nasAutoUpload => _flag('nasAutoUpload', false);
   bool get nasConfigured => nasUrl.trim().isNotEmpty;
+  Set<String> get landscapeSources => {
+    for (final value in (_settings['landscapeSources'] as List? ?? const []))
+      if (value is String && value.isNotEmpty) value,
+  };
+  bool landscapeCover(String source) => landscapeSources.contains(source);
+  Future<void> setLandscapeCover(String source, bool value) => _queue(() async {
+    _requireAdmin();
+    final next = landscapeSources;
+    value ? next.add(source) : next.remove(source);
+    await _saveSettings({
+      ..._settings,
+      'landscapeSources': next.toList()..sort(),
+    });
+  });
   bool get deleteAfterAutoExport => _flag('deleteAfterAutoExport', false);
   bool get deleteAfterManualExport => _flag('deleteAfterManualExport', false);
   bool get shareUsage => _flag('shareUsage', true);
