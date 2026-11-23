@@ -572,13 +572,19 @@ class SettingsSection extends StatelessWidget {
             ValueTile<String>(
               title: site.name,
               options: _sourceProxyModes,
-              value: settings.sourceProxies[site.id]?.mode ?? 'follow',
+              value:
+                  (settings.sourceProxies[site.id] ??
+                          settings.sourceProxies[site.groupId])
+                      ?.mode ??
+                  'follow',
               onChanged: editable
                   ? (value) => switch (value) {
                       'manual' => _editSourceProxy(context, settings, site.id),
                       'follow' => _saveResource(
                         context,
-                        settings.withSourceProxy(site.id, null),
+                        settings
+                            .withSourceProxy(site.id, null)
+                            .withSourceProxy(site.groupId, null),
                       ),
                       _ => _saveResource(
                         context,
@@ -587,7 +593,10 @@ class SettingsSection extends StatelessWidget {
                     }
                   : null,
             ),
-            if (settings.sourceProxies[site.id]?.mode == 'manual')
+            if ((settings.sourceProxies[site.id] ??
+                    settings.sourceProxies[site.groupId])
+                ?.mode ==
+                'manual')
               SettingsTile(
                 title: '${site.name} · 代理地址',
                 value: '已设置',
