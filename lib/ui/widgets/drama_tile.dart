@@ -133,7 +133,9 @@ class DramaTile extends StatelessWidget {
     this.autofocus = false,
     this.showScore = false,
     this.exploreBlur = false,
+    this.landscape,
   });
+  final bool? landscape;
   final Drama drama;
   final VoidCallback onTap;
   final bool showScore;
@@ -170,7 +172,9 @@ class DramaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _PosterButton(
-    landscape: AppScope.of(context).repository.landscapeCover(drama.source),
+    landscape:
+        landscape ??
+        AppScope.of(context).repository.landscapeCover(drama.source),
     cover: DramaCover(
       drama: drama,
       radius: _coverRadius,

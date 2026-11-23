@@ -49,12 +49,16 @@ double dramaTileWidth(BuildContext context, double width) {
   return (width - (columns - 1) * spacing) / columns;
 }
 
-SliverGridDelegate dramaGridDelegate(BuildContext context, double width) {
-  final landscape = _landscapeGrid(context);
+SliverGridDelegate dramaGridDelegate(
+  BuildContext context,
+  double width, {
+  bool? landscape,
+}) {
+  final horizontal = landscape ?? _landscapeGrid(context);
   final (columns, spacing, runSpacing) = _gridLayout(
     context,
     width,
-    landscape: landscape,
+    landscape: horizontal,
   );
   final tile = (width - (columns - 1) * spacing) / columns;
   return SliverGridDelegateWithFixedCrossAxisCount(
@@ -64,7 +68,7 @@ SliverGridDelegate dramaGridDelegate(BuildContext context, double width) {
     mainAxisExtent: DramaTile.extentFor(
       context,
       tile,
-      landscape: landscape,
+      landscape: horizontal,
     ),
   );
 }
@@ -98,8 +102,10 @@ class DramaSliverGrid extends StatelessWidget {
     this.entered,
     this.showScore = false,
     this.exploreBlur = false,
+    this.allowLandscape = true,
   });
   final bool exploreBlur;
+  final bool allowLandscape;
   final double width;
   final List<Drama> items;
   final ValueChanged<Drama> onOpen;
@@ -111,9 +117,18 @@ class DramaSliverGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (columns, _, _) = _gridLayout(context, width);
+    final horizontal = allowLandscape && _landscapeGrid(context);
+    final (columns, _, _) = _gridLayout(
+      context,
+      width,
+      landscape: horizontal,
+    );
     return SliverGrid.builder(
-      gridDelegate: dramaGridDelegate(context, width),
+      gridDelegate: dramaGridDelegate(
+        context,
+        width,
+        landscape: horizontal,
+      ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final drama = items[index];
@@ -125,6 +140,7 @@ class DramaSliverGrid extends StatelessWidget {
               wrapGridRow(index, columns, items.length, event),
           child: DramaTile(
             drama: drama,
+            landscape: allowLandscape ? null : false,
             rank: rankOf?.call(drama),
             autofocus: autofocus && index == 0,
             showScore: showScore,

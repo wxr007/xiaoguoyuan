@@ -240,6 +240,7 @@ class _SearchPageState extends State<SearchPage> {
                 width: constraints.maxWidth - inset * 2,
                 items: results.items,
                 autofocus: television,
+                allowLandscape: false,
                 onOpen: _open,
                 onMore: (drama) => quickFollow(context, widget.store, drama),
               ),
