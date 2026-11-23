@@ -11,35 +11,62 @@ import 'drama_tile.dart';
 import 'focus_ring.dart';
 import 'motion/motion_widgets.dart';
 
-(int, double, double) _gridLayout(BuildContext context, double width) =>
-    switch (AppScope.formFactorOf(context)) {
-      FormFactor.phone => (3, 10.0, 22.0),
-      FormFactor.television => (
-        ((width + 20) / 120).floor().clamp(3, 8),
-        20.0,
-        24.0,
-      ),
-      FormFactor.window => (
-        math.max(2, ((width + 18) / 178).floor()),
-        18.0,
-        24.0,
-      ),
-      FormFactor.pad => ((width / 180).floor().clamp(4, 9), 18.0, 22.0),
-    };
+(int, double, double) _gridLayout(
+  BuildContext context,
+  double width, {
+  bool landscape = false,
+}) {
+  final (base, spacing, runSpacing) =
+      switch (AppScope.formFactorOf(context)) {
+        FormFactor.phone => (3, 10.0, 22.0),
+        FormFactor.television => (
+          ((width + 20) / 120).floor().clamp(3, 8),
+          20.0,
+          24.0,
+        ),
+        FormFactor.window => (
+          math.max(2, ((width + 18) / 178).floor()),
+          18.0,
+          24.0,
+        ),
+        FormFactor.pad => ((width / 180).floor().clamp(4, 9), 18.0, 22.0),
+      };
+  return (landscape ? math.max(1, base - 1) : base, spacing, runSpacing);
+}
+
+bool _landscapeGrid(BuildContext context) {
+  final store = AppScope.of(context).repository.access;
+  if (store == null) return false;
+  return store.landscapeCover(store.source);
+}
 
 double dramaTileWidth(BuildContext context, double width) {
-  final (columns, spacing, _) = _gridLayout(context, width);
+  final landscape = _landscapeGrid(context);
+  final (columns, spacing, _) = _gridLayout(
+    context,
+    width,
+    landscape: landscape,
+  );
   return (width - (columns - 1) * spacing) / columns;
 }
 
 SliverGridDelegate dramaGridDelegate(BuildContext context, double width) {
-  final (columns, spacing, runSpacing) = _gridLayout(context, width);
-  final tile = dramaTileWidth(context, width);
+  final landscape = _landscapeGrid(context);
+  final (columns, spacing, runSpacing) = _gridLayout(
+    context,
+    width,
+    landscape: landscape,
+  );
+  final tile = (width - (columns - 1) * spacing) / columns;
   return SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: columns,
     crossAxisSpacing: spacing,
     mainAxisSpacing: runSpacing,
-    mainAxisExtent: DramaTile.extentFor(context, tile),
+    mainAxisExtent: DramaTile.extentFor(
+      context,
+      tile,
+      landscape: landscape,
+    ),
   );
 }
 

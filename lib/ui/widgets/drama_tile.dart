@@ -215,12 +215,17 @@ class ProgressPoster extends StatelessWidget {
   final double width;
   final bool? selected;
 
-  static double extentFor(BuildContext context, double width) {
+  static double extentFor(
+    BuildContext context,
+    double width, {
+    bool landscape = false,
+  }) {
     final scaler = MediaQuery.textScalerOf(context);
     final television = AppScope.of(context).television;
     final title = scaler.scale(television ? 15 : 14) * 1.3;
     final caption = scaler.scale(television ? 13 : 12) * 1.3;
-    return (width * 1.5 + 8 + title + 2 + caption).ceilToDouble();
+    return (width * (landscape ? 9 / 16 : 1.5) + 8 + title + 2 + caption)
+        .ceilToDouble();
   }
 
   @override
